@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 
 import java.time.LocalDate;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "customers")
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +20,6 @@ public class Customer {
     private String lastName;
     private String email;
     @CreationTimestamp
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
 }
