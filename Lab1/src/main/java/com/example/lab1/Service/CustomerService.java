@@ -26,7 +26,28 @@ public class CustomerService {
         return customerRepository.save(customer);
     }
 
-    public void deleteCustomer(Long id) {
-        customerRepository.deleteById(id);
+    public Optional<Customer> updateCustomer(Long id, Customer customerDetails) {
+        return customerRepository.findById(id)
+                .map(existingCustomer -> {
+                    // Обновляем поля
+                    if (customerDetails.getFirstName() != null && !customerDetails.getFirstName().isBlank()) {
+                        existingCustomer.setFirstName(customerDetails.getFirstName());
+                    }
+                    if (customerDetails.getLastName() != null && !customerDetails.getLastName().isBlank()) {
+                        existingCustomer.setLastName(customerDetails.getLastName());
+                    }
+                    if (customerDetails.getEmail() != null && !customerDetails.getEmail().isBlank()) {
+                        existingCustomer.setEmail(customerDetails.getEmail());
+                    }
+                    return customerRepository.save(existingCustomer);
+                });
+    }
+
+    public boolean deleteCustomer(Long id) {
+        if (customerRepository.existsById(id)) {
+            customerRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

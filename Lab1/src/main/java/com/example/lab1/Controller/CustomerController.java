@@ -39,32 +39,18 @@ public class CustomerController {
     // PUT /api/customers/1
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customerDetails) {
-        return customerService.getCustomerById(id)
-                .map(existingCustomer -> {
-                    // Обновляем только непустые/не-null поля
-                    if (customerDetails.getFirstName() != null && !customerDetails.getFirstName().isBlank()) {
-                        existingCustomer.setFirstName(customerDetails.getFirstName());
-                    }
-                    if (customerDetails.getLastName() != null && !customerDetails.getLastName().isBlank()) {
-                        existingCustomer.setLastName(customerDetails.getLastName());
-                    }
-                    if (customerDetails.getEmail() != null && !customerDetails.getEmail().isBlank()) {
-                        existingCustomer.setEmail(customerDetails.getEmail());
-                    }
-
-                    Customer updatedCustomer = customerService.saveCustomer(existingCustomer);
-                    return ResponseEntity.ok(updatedCustomer);
-                })
+        return customerService.updateCustomer(id, customerDetails)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // DELETE /api/customers/1
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
-        if (customerService.getCustomerById(id).isPresent()) {
-            customerService.deleteCustomer(id);
+        if (customerService.deleteCustomer(id)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
     }
+
 }
