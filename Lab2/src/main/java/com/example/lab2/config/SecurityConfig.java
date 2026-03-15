@@ -1,19 +1,36 @@
 package com.example.lab2.config;
 
+import com.example.lab2.Service.UserDetailsServiceImpl;
+import com.example.lab2.filter.JwtAuthFilter;
+import com.example.lab2.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @Configuration
 @EnableWebSecurity
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    @Bean
+    public JwtAuthFilter jwtAuthFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userService) {
+        return new JwtAuthFilter(jwtUtil, userService);
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -26,17 +43,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // Обычно отключаем для REST API
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Разрешаем только регистрацию и логин
                         .requestMatchers("/api/auth/**").permitAll()
                         // Всё остальное — под замок
                         .anyRequest().authenticated()
                 )
-                // Включаем базовую аутентификацию (для тестов в Postman/браузере)
-                .httpBasic(Customizer.withDefaults());
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // ← подключаем фильтр
 
         return http.build();
     }

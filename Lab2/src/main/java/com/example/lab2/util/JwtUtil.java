@@ -4,14 +4,18 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
@@ -23,12 +27,18 @@ public class JwtUtil {
     private Long expiration;
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyForKey(secret.getBytes());
+        byte[] keyBytes = secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return new javax.crypto.spec.SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
     public String generateToken(UserDetails userDetails) {
+// Получаем роли из UserDetails
+       List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).toList();
+
         Map<String, Object> claims = new HashMap<>();
-        // Можно добавить роли позже
+        // Добавляем роли в токен
+        claims.put("roles", roles);
         return createToken(claims, userDetails.getUsername());
     }
 

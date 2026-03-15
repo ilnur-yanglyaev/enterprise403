@@ -13,4 +13,8 @@ public class Role {
 
     @Column(unique = true, nullable = false)
     private String name; // Например: "ROLE_USER", "ROLE_ADMIN"
+
+    public String getName() {
+        return name;
+    }
 }
