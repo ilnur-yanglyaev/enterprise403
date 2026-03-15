@@ -2,29 +2,26 @@
 package com.example.lab2.filter;
 
 import com.example.lab2.Service.UserDetailsServiceImpl;
-import com.example.lab2.util.JwtUtil;
+import com.example.lab2.Service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 //@Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final UserDetailsServiceImpl userService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userService) {
-        this.jwtUtil = jwtUtil;
+    public JwtAuthFilter(JwtService jwtService, UserDetailsServiceImpl userService) {
+        this.jwtService = jwtService;
         this.userService = userService;
     }
 
@@ -42,7 +39,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             try {
                 // Извлекаем username из токена
-                String username = jwtUtil.getUsernameFromToken(token);
+                String username = jwtService.getUsernameFromToken(token);
 
                 // Проверяем, что пользователь не аутентифицирован
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -51,7 +48,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     UserDetails userDetails = userService.loadUserByUsername(username);
 
                     // Проверяем валидность токена
-                    if (jwtUtil.validateToken(token, userDetails)) {
+                    if (jwtService.validateToken(token, userDetails)) {
                         // Создаём Authentication объект
                         UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(
