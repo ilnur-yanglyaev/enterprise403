@@ -80,14 +80,43 @@ public class CustomerService {
                     }
                     return customerRepository.save(existingCustomer);
                 });
+
     }
 
     @CacheEvict(value = {"customers", "allCustomers"}, allEntries = true)
     public boolean deleteCustomer(Long id) {
-        if (customerRepository.existsById(id)) {
-            customerRepository.deleteById(id);
-            return true;
+        if (!customerRepository.existsById(id)) {
+            // Выбрасываем исключение вместо возврата false
+            throw new RuntimeException("Customer with ID " + id + " not found");
         }
-        return false;
+        customerRepository.deleteById(id);
+        return true;
     }
+
+    @Cacheable(value = "customers", key = "#id")
+    public Customer getCustomerByIdOrThrow(Long id) {
+        return customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer with ID " + id + " not found"));
+    }
+
+    @CacheEvict(value = {"customers", "allCustomers"}, allEntries = true)
+    public Customer updateCustomerOrThrow(Long id, Customer customerDetails) {
+        return customerRepository.findById(id)
+                .map(existingCustomer -> {
+                    if (customerDetails.getFirstName() != null && !customerDetails.getFirstName().isBlank()) {
+                        existingCustomer.setFirstName(customerDetails.getFirstName());
+                    }
+                    if (customerDetails.getLastName() != null && !customerDetails.getLastName().isBlank()) {
+                        existingCustomer.setLastName(customerDetails.getLastName());
+                    }
+                    if (customerDetails.getEmail() != null && !customerDetails.getEmail().isBlank()) {
+                        existingCustomer.setEmail(customerDetails.getEmail());
+                    }
+
+
+                    return customerRepository.save(existingCustomer);
+                })
+                .orElseThrow(() -> new RuntimeException("Customer with ID " + id + " not found"));
+    }
+
 }
